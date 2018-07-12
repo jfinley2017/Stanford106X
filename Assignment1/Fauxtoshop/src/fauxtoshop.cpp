@@ -53,6 +53,7 @@ int getPixelDifference(int pixelOne, int pixelTwo);
  * and/or GWindow(s) that go in and out of scope, can cause program
  * crashes).
  */
+
 int main() {
     GWindow gw;
     gw.setTitle("Fauxtoshop");
