@@ -1,6 +1,3 @@
-
-// This is the CPP file you ill edit and turn in. (TODO: Remove this comment!)
-
 #include <iostream>
 #include <limits>
 #include <fstream>
@@ -92,7 +89,6 @@ void doNGrams(int NGrams, ifstream &fileStream)
             break;
         }
 
-
          getYesOrNo("Attempt to print full sentences? (y,n)", "Please answer yes or no", "no")
                  ? generateOutputSentences(nGramMap, numToPrint) : generateOutput(nGramMap, numToPrint);
     }
@@ -149,7 +145,6 @@ void generateOutput(map<vector<string>, vector<string> > &mapToPrint, int numToP
     vector<vector<string> > Keys = getKeys(mapToPrint);
     deque<string> window;
     string output;
-    int numPrinted = 0;
 
     // initialize window, printing the elements added
     int startIndex = randomInteger(0,Keys.size()-1);
@@ -158,10 +153,10 @@ void generateOutput(map<vector<string>, vector<string> > &mapToPrint, int numToP
     {
         window.push_back(Keys[startIndex][i]);
         output += Keys[startIndex][i] + " ";
-        numPrinted++;
     }
 
     // go through the map
+    int numPrinted = window.size();
     while(numPrinted < numToPrint)
     {
          vector<string> key = dequeToString(window);
@@ -195,19 +190,18 @@ void generateOutputSentences(map<vector<string>, vector<string> > &mapToPrint, i
         return;
     }
 
-    int numPrinted = 0;
-    int rand = randomInteger(0,startKeys.size()-1);
     deque<string> window;
     string output;
 
-    for(int i = 0; i < startKeys[rand].size(); i++)
+    int startIndex = randomInteger(0,startKeys.size()-1);
+    for(int i = 0; i < startKeys[startIndex].size(); i++)
     {
-        window.push_back(startKeys[rand][i]);
-        output += startKeys[rand][i] + " ";
-        numPrinted++;
+        window.push_back(startKeys[startIndex][i]);
+        output += startKeys[startIndex][i] + " ";
     }
 
     // go through the map
+    int numPrinted = window.size();
     while(numPrinted < numToPrint)
     {
         while(1)
@@ -284,7 +278,6 @@ void addToMap(map<vector<string>, vector<string> > &nGramMap, vector<string> &Ke
     }
     else
     {
-
         vector<string> newVector{Val};
         nGramMap.insert(pair<vector<string>,vector<string>>(Key, newVector));
     }
@@ -302,7 +295,6 @@ int getNumWordsFile(ifstream &fileStream)
     {
         numWords++;
     }
-
 
     fileStream.clear();
     fileStream.seekg(ios_base::beg);
