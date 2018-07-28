@@ -1,4 +1,5 @@
-// This is the CPP file you will edit and turn in. (TODO: Remove this comment!)
+
+// This is the CPP file you ill edit and turn in. (TODO: Remove this comment!)
 
 #include <iostream>
 #include <limits>
@@ -16,16 +17,33 @@ using namespace std;
 int    iMin = std::numeric_limits<int>::min();
 int    iMax = std::numeric_limits<int>::max();
 
-
+// Main worker functions
 void doNGrams(int NGrams, ifstream& fileStream);
-int populateMap(int NGrams, map<vector<string>, vector<string> > &nGramMap ,ifstream &fileStream);
 
+// Reads through a file and populates a nGram map based on the NGrams provided.
+void populateMap(int NGrams, map<vector<string>, vector<string> > &nGramMap ,ifstream &fileStream);
+
+// Utility functions used to generate output based on an existing map. generateOutputSentences attempts to generate full sentences, can fail.
+void generateOutput(map<vector<string>, vector<string> > &mapToPrint, int numToPrint);
+void generateOutputSentences(map<vector<string>, vector<string> > &mapToPrint, int numToPrint);
+
+// Utility functions used to grab keys. getStartKeys filters for keys which begin with a capital letter
+vector<vector<string> > getStartKeys(map<vector<string>, vector<string> > &map);
+vector<vector<string> > getKeys(map<vector<string>, vector<string> > &map);
+
+// Resets a filestream and set the position to the start, then loops over returning the number of words found.
+// Resets the filestream back to 0 after execution.
+int getNumWordsFile(ifstream &fileStream);
+
+// Adds to the specified map. If the key exists, value will be pushed to the end, else it will generate a new index based on the value Key
 void addToMap(map<vector<string>, vector<string> > &nGramMap, vector<string> &Key, string& Val);
+
+// Iterates over a deque, adding the elements found to a vector, returns the vector.
 vector<string> dequeToString(deque<string> &inputDeque);
+
+// Utility functions to get user input from a range, prints the error prompt with the range specified if the input is out of range.
 int getIntegerRangeInclusive(string prompt, string errorPrompt, int min, int max);
 int getIntegerRangeExclusive(string prompt, string errorPrompt, int min, int max);
-void printMap(map<vector<string>, vector<string> > &mapToPrint, int numToPrint);
-vector<vector<string> > getKeys(map<vector<string>, vector<string> > &map);
 
 
 int main() {
@@ -49,7 +67,9 @@ int main() {
         }
     }
 
-    NGrams = getIntegerRangeInclusive("Value of N: ", "N must be 2 or greater", 2, iMax);
+    int numWords = getNumWordsFile(input);
+    NGrams = getIntegerRangeInclusive("Value of N: ", "N must be at least 2 and less than the size of the file provided (" + integerToString(numWords) + ")", 2, numWords);
+
     doNGrams(NGrams,input);
 
     cout << "Exiting." << endl;
@@ -61,37 +81,29 @@ int main() {
 void doNGrams(int NGrams, ifstream &fileStream)
 {
     map<vector<string>, vector<string>> nGramMap;
-
-    int numWords = populateMap(NGrams, nGramMap, fileStream);
-
-    if(!(numWords > 0))
-    {
-        cout << "Error populating NGram map" << endl;
-    }
+    populateMap(NGrams, nGramMap, fileStream);
 
     while(1)
     {
-
-        int numToPrint = getIntegerRangeInclusive("Number of words to print (0 to quit): ", "Must be at least " + integerToString(NGrams) + "Words.", NGrams, numWords);
+        int numToPrint = getIntegerRangeInclusive("Number of words to print (0 to quit): ", "Must be at least " + integerToString(NGrams) + " Words.", NGrams, iMax);
 
         if(numToPrint == 0)
         {
             break;
         }
 
-        printMap(nGramMap, numToPrint);
 
+         getYesOrNo("Attempt to print full sentences? (y,n)", "Please answer yes or no", "no")
+                 ? generateOutputSentences(nGramMap, numToPrint) : generateOutput(nGramMap, numToPrint);
     }
 }
 
 
-int populateMap(int NGrams, map<vector<string>, vector<string> > &nGramMap, ifstream &fileStream)
+void populateMap(int NGrams, map<vector<string>, vector<string> > &nGramMap, ifstream &fileStream)
 {
 
-    streampos start = fileStream.tellg();
     string word;
     deque<string> window;
-    int numWords = 0;
 
     // iterate through entire file
     while(fileStream >> word )
@@ -113,62 +125,57 @@ int populateMap(int NGrams, map<vector<string>, vector<string> > &nGramMap, ifst
             addToMap(nGramMap, Key , word);
             window.pop_front();
             window.push_back(word);
-
         }
-        numWords++;
     }
 
     // wrap around
     fileStream.clear();
-    fileStream.seekg(start);
+    fileStream.seekg(ios_base::beg);
 
     for(int i = 0; i < NGrams - 1; i++)
     {
         fileStream >> word;
-
         vector<string> Key = dequeToString(window);
         addToMap(nGramMap, Key, word);
         window.pop_front();
         window.push_back(word);
 
     }
-
-    return numWords;
 }
 
-void printMap(map<vector<string>, vector<string> > &mapToPrint, int numToPrint)
+void generateOutput(map<vector<string>, vector<string> > &mapToPrint, int numToPrint)
 {
-    string output;
-    vector<vector<string> > Keys = getKeys(mapToPrint);
-    int numPrinted = 0;
-    int rand = randomInteger(0,Keys.size()-1);
-    deque<string> window;
 
+    vector<vector<string> > Keys = getKeys(mapToPrint);
+    deque<string> window;
+    string output;
+    int numPrinted = 0;
 
     // initialize window, printing the elements added
+    int startIndex = randomInteger(0,Keys.size()-1);
     cout << "... ";
-    for(int i = 0; i < Keys[rand].size(); i++)
+    for(int i = 0; i < Keys[startIndex].size(); i++)
     {
-        window.push_back(Keys[rand][i]);
-        output += Keys[rand][i] + " ";
+        window.push_back(Keys[startIndex][i]);
+        output += Keys[startIndex][i] + " ";
+        numPrinted++;
     }
 
-    numPrinted += window.size();
-
     // go through the map
-    while(numPrinted != numToPrint)
+    while(numPrinted < numToPrint)
     {
          vector<string> key = dequeToString(window);
-         window.pop_front();
          if(mapToPrint[key].size() > 1)
          {
              int randChoice = randomInteger(0, mapToPrint[key].size()-1);
              output += mapToPrint[key][randChoice] + " ";
+             window.pop_front();
              window.push_back(mapToPrint[key][randChoice]);
          }
          else
          {
              output += mapToPrint[key][0] + " ";
+             window.pop_front();
              window.push_back(mapToPrint[key][0]);
          }
          numPrinted++;
@@ -176,6 +183,78 @@ void printMap(map<vector<string>, vector<string> > &mapToPrint, int numToPrint)
     cout << output + "..." << endl;
 
 }
+
+
+void generateOutputSentences(map<vector<string>, vector<string> > &mapToPrint, int numToPrint)
+{
+    vector<vector<string> > startKeys = getStartKeys(mapToPrint);
+
+    if(startKeys.empty())
+    {
+        cout << "This input contains no starts of sentences." << endl;
+        return;
+    }
+
+    int numPrinted = 0;
+    int rand = randomInteger(0,startKeys.size()-1);
+    deque<string> window;
+    string output;
+
+    for(int i = 0; i < startKeys[rand].size(); i++)
+    {
+        window.push_back(startKeys[rand][i]);
+        output += startKeys[rand][i] + " ";
+        numPrinted++;
+    }
+
+    // go through the map
+    while(numPrinted < numToPrint)
+    {
+        while(1)
+        {
+            vector<string> key = dequeToString(window);
+            if(mapToPrint[key].size() > 1)
+            {
+                int randChoice = randomInteger(0, mapToPrint[key].size()-1);
+                output += mapToPrint[key][randChoice] + " ";
+                numPrinted++;
+                window.pop_front();
+                window.push_back(mapToPrint[key][randChoice]);
+                if(mapToPrint[key][randChoice].back() == '.' || mapToPrint[key][randChoice].back() == '?' || mapToPrint[key][randChoice].back() == '!')
+                {
+                    break;
+                }
+            }
+            else
+            {
+                output += mapToPrint[key][0] + " ";
+                numPrinted++;
+                window.pop_front();
+                window.push_back(mapToPrint[key][0]);
+                if(mapToPrint[key][0].back() == '.' || mapToPrint[key][0].back() == '?' || mapToPrint[key][0].back() == '!')
+                {
+                    break;
+                }
+            }
+        }
+    }
+    cout << output << endl;
+}
+
+vector<vector<string> > getStartKeys(map<vector<string>, vector<string> > &map)
+{
+    vector<vector<string> > keys;
+    for(auto& p : map)
+    {
+        if( isupper(p.first[0].at(0)) )
+        {
+            keys.push_back(p.first);
+        }
+
+    }
+    return keys;
+}
+
 
 vector<vector<string> > getKeys(map<vector<string>, vector<string> > &map)
 {
@@ -189,7 +268,6 @@ vector<vector<string> > getKeys(map<vector<string>, vector<string> > &map)
 
 vector<string> dequeToString(deque<string> &inputDeque)
 {
-
     vector<string> newVector;
     for(int i = 0; i< inputDeque.size(); i++)
     {
@@ -200,7 +278,6 @@ vector<string> dequeToString(deque<string> &inputDeque)
 
 void addToMap(map<vector<string>, vector<string> > &nGramMap, vector<string> &Key, string& Val)
 {
-
     if(nGramMap.find(Key) != nGramMap.end())
     {
         nGramMap[Key].push_back(Val);
@@ -210,10 +287,28 @@ void addToMap(map<vector<string>, vector<string> > &nGramMap, vector<string> &Ke
 
         vector<string> newVector{Val};
         nGramMap.insert(pair<vector<string>,vector<string>>(Key, newVector));
+    }
+}
 
+int getNumWordsFile(ifstream &fileStream)
+{
+    fileStream.clear();
+    fileStream.seekg(ios_base::beg);
+
+    string word;
+    int numWords = 0;
+
+    while(fileStream >> word)
+    {
+        numWords++;
     }
 
+
+    fileStream.clear();
+    fileStream.seekg(ios_base::beg);
+    return numWords;
 }
+
 
 int getIntegerRangeInclusive(string prompt, string errorPrompt, int min, int max)
 {
