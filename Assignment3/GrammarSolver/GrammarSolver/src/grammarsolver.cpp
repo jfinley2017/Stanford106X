@@ -1,5 +1,3 @@
-// This is the CPP file you will edit and turn in. (TODO: Remove this comment!)
-
 #include "grammarsolver.h"
 #include "strlib.h"
 #include "random.h"
