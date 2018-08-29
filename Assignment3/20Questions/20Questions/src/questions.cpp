@@ -22,9 +22,7 @@ void skip(istream &input)
         return;
     }
 
-
     return;
-
 }
 
 // recursive function which asks the questions and waits for answers
@@ -34,9 +32,10 @@ bool playQuestionGame(istream& input)
 {
     string question;
     getline(input,question);
+    // base case, attempt to guess the thought about entity
     if(startsWith(question, "A:"))
     {
-        return getYesOrNo(question,"Yes or no answers.");
+        return getYesOrNo("Are you thinking of: " + question.substr(2,question.size()-1) + "?","Yes or no answers.");
     }
     // ask the question at the line, skip to the next correct line if false
     else
