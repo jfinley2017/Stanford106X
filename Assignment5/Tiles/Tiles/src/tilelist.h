@@ -26,7 +26,6 @@ public:
      * destroys the list, deleting all memory allocated on the heap
      */
     void clear();
-    void debug();
 
     /**
      * @brief drawAll - iterates over the list back to front, drawing tiles in the correct order

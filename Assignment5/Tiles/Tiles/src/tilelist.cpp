@@ -1,17 +1,11 @@
-// This is the CPP file you will edit and turn in. (TODO: Remove this comment!)
-
 #include "tilelist.h"
 
 TileList::TileList() {
-    // TODO: write this constructor
+
 }
 
 TileList::~TileList() {
     clear();
-}
-
-void TileList::debug() {
-    // TODO: write this function (optional)
 }
 
 /**
